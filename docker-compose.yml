@@ -1,6 +1,6 @@
 services:
   postgres14:
-    label:
+    labels:
       - "traefik.enable=false"
     build:
       context: .
@@ -14,7 +14,7 @@ services:
       POSTGRES_DB: odk
     restart: always
   postgres:
-    label:
+    labels:
       - "traefik.enable=false"
     # This service upgrades from postgres 9.6 to 14.
     # The legacy name must be maintained to allow access to the anonymous volume.
@@ -31,7 +31,7 @@ services:
       POSTGRES_PASSWORD: odk
       POSTGRES_DB: odk
   mail:
-    label:
+    labels:
       - "traefik.enable=false"
     image: "registry.gitlab.com/egos-tech/smtp:1.1.5"
     volumes:
@@ -41,7 +41,7 @@ services:
       - DKIM_KEY_PATH=/etc/exim4/dkim.key.temp
     restart: always
   service:
-    label:
+    labels:
       - "traefik.enable=false"
     build:
       context: .
@@ -134,12 +134,12 @@ services:
       options:
         max-file: "30"
   pyxform:
-    label:
+    labels:
       - "traefik.enable=false"
     image: 'ghcr.io/getodk/pyxform-http:v4.3.1'
     restart: always
   secrets:
-    label:
+    labels:
       - "traefik.enable=false"
     volumes:
       - secrets:/etc/secrets
@@ -148,7 +148,7 @@ services:
       dockerfile: secrets.dockerfile
     command: './generate-secrets.sh'
   enketo:
-    label:
+    labels:
       - "traefik.enable=false"
     volumes:
       - secrets:/etc/secrets
@@ -165,7 +165,7 @@ services:
       - SUPPORT_EMAIL=${SYSADMIN_EMAIL}
       - HTTPS_PORT=${HTTPS_PORT:-443}
   enketo_redis_main:
-    label:
+    labels:
       - "traefik.enable=false"
     image: redis:7.4.7
     volumes:
@@ -176,7 +176,7 @@ services:
       - /usr/local/etc/redis/redis.conf
     restart: always
   enketo_redis_cache:
-    label:
+    labels:
       - "traefik.enable=false"
     image: redis:7.4.7
     volumes:
