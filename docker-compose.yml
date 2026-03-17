@@ -192,3 +192,6 @@ volumes:
   postgres14:
   enketo_redis_main:
   enketo_redis_cache:
+networks:
+  proxy:
+    external: true
