@@ -1,5 +1,7 @@
 services:
   postgres14:
+    label:
+      - "traefik.enable=false"
     build:
       context: .
       dockerfile: postgres14.dockerfile
@@ -12,6 +14,8 @@ services:
       POSTGRES_DB: odk
     restart: always
   postgres:
+    label:
+      - "traefik.enable=false"
     # This service upgrades from postgres 9.6 to 14.
     # The legacy name must be maintained to allow access to the anonymous volume.
     build:
@@ -27,6 +31,8 @@ services:
       POSTGRES_PASSWORD: odk
       POSTGRES_DB: odk
   mail:
+    label:
+      - "traefik.enable=false"
     image: "registry.gitlab.com/egos-tech/smtp:1.1.5"
     volumes:
       - ./files/mail/rsa.private:/etc/exim4/dkim.key.temp:ro
@@ -35,6 +41,8 @@ services:
       - DKIM_KEY_PATH=/etc/exim4/dkim.key.temp
     restart: always
   service:
+    label:
+      - "traefik.enable=false"
     build:
       context: .
       dockerfile: service.dockerfile
@@ -102,9 +110,22 @@ services:
       - ./files/local/customssl/:/etc/customssl/live/local/:ro
       - ./files/nginx/odk.conf.template:/usr/share/odk/nginx/odk.conf.template:ro
       - ./files/nginx/client-config.json.template:/usr/share/odk/nginx/client-config.json.template:ro
-    ports:
-      - "${HTTP_PORT:-80}:80"
-      - "${HTTPS_PORT:-443}:443"
+   networks:
+      - default
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.odk-insecure.rule=Host(`odk.palmas.to.gov.br`)"
+      - "traefik.http.routers.odk-insecure.entrypoints=web"
+      - "traefik.http.routers.odk-insecure.middlewares=redirect-to-https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+
+      - "traefik.http.routers.odk.rule=Host(`odk.palmas.to.gov.br`)"
+      - "traefik.http.routers.odk.entrypoints=websecure"
+      - "traefik.http.routers.odk.tls=true"
+      - "traefik.http.routers.odk.tls.certresolver=ls-prod"
+
+      - "traefik.http.services.odk.loadbalancer.server.port=80"
     healthcheck:
       test: [ "CMD-SHELL", "nc -z localhost 80 || exit 1" ]
     restart: always
@@ -113,9 +134,13 @@ services:
       options:
         max-file: "30"
   pyxform:
+    label:
+      - "traefik.enable=false"
     image: 'ghcr.io/getodk/pyxform-http:v4.3.1'
     restart: always
   secrets:
+    label:
+      - "traefik.enable=false"
     volumes:
       - secrets:/etc/secrets
     build:
@@ -123,6 +148,8 @@ services:
       dockerfile: secrets.dockerfile
     command: './generate-secrets.sh'
   enketo:
+    label:
+      - "traefik.enable=false"
     volumes:
       - secrets:/etc/secrets
     build:
@@ -138,6 +165,8 @@ services:
       - SUPPORT_EMAIL=${SYSADMIN_EMAIL}
       - HTTPS_PORT=${HTTPS_PORT:-443}
   enketo_redis_main:
+    label:
+      - "traefik.enable=false"
     image: redis:7.4.7
     volumes:
       - ./files/enketo/redis-enketo-main.conf:/usr/local/etc/redis/redis.conf:ro
@@ -147,6 +176,8 @@ services:
       - /usr/local/etc/redis/redis.conf
     restart: always
   enketo_redis_cache:
+    label:
+      - "traefik.enable=false"
     image: redis:7.4.7
     volumes:
       - ./files/enketo/redis-enketo-cache.conf:/usr/local/etc/redis/redis.conf:ro
